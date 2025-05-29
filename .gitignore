@@ -1,8 +1,31 @@
+# Python yuck-yucks
 __pycache__/
 *.pyc
+
+# Terminal fumbles and editor leftovers
 *.log
+*.swp
+
+# Secret squirrels - not for GitHub...
 .env
 venv/
-*.swp
-*.sqlite3
+
+# Audio misfits and database blobs
 *.mp3
+*.wav
+*.sqlite3
+
+# Output clutter - things we make but don't wanna keep
+*.out
+*.tmp
+*.cache
+
+# IDE ghosts
+.vscode/
+.idea/
+*.code-workspace
+
+# OS breadcrumbs
+.DS_Store
+Thumbs.db
+

@@ -7,4 +7,4 @@ async def main():
 	for d in devices:
 		print(f"{d.name} - {d.address}")
 
-asynio.run(main())
+asyncio.run(main())

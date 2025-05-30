@@ -1,5 +1,6 @@
 # main.py
-
+from dotenv import load_dotenv
+load_dotenv()
 from gooey.looking_glass import LookingGlass
 from merge.x_marks import load_XMarks, get_Sparkle
 from merge.ali_n import ask_AliN

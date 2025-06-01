@@ -38,7 +38,7 @@ def recognize_from_mic(duration=10):
 
     with sd.RawInputStream(samplerate=16000, blocksize=8000, dtype='int16',
                            channels=1, callback=callback):
-        print(f"🎙️ Listening for {duration} seconds...")
+        print(f"Listening for {duration} seconds...")
         start_time = time.time()
         while time.time() - start_time < duration:
             data = q.get()
@@ -50,12 +50,12 @@ def recognize_from_mic(duration=10):
 
     return full_text.strip()
 
-def save_to_csv(text):
+def save_to_csv(event_text, husky_id):
     timestamp = datetime.now().isoformat(timespec='seconds')
     with open(ARCHIVE_CSV, mode='a', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
-        writer.writerow([timestamp, text])
-
+        writer.writerow([timestamp, husky_id, event_text])
+        
 def load_csv_history():
     try:
         with open(ARCHIVE_CSV, newline='', encoding='utf-8') as f:
@@ -66,6 +66,31 @@ def load_csv_history():
         return []
 
 class LookingGlass:
+    def show_popup(self, event):
+        selected = self.tree.selection()
+        if not selected:
+            return
+        row = self.tree.item(selected[0], 'values')
+        if not row or len(row) < 3:
+            return
+    
+        timestamp, husky_id, event_text = row
+    
+        popup = tk.Toplevel(self.root)
+        popup.title("Full Entry")
+        popup.geometry("500x300")
+    
+        full_text = f"""Timestamp: {timestamp}
+    Husky ID: {husky_id}
+    
+    Event Text:
+    {event_text}
+    """
+    
+        label = tk.Label(popup, text=full_text, justify="left", anchor="w", wraplength=480)
+        label.pack(padx=10, pady=10)
+
+    
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Looking Glass")
@@ -92,14 +117,17 @@ class LookingGlass:
         self.transcription = tk.Label(self.input_tab, text="", wraplength=500, justify="left")
         self.transcription.pack(pady=20)
 
-        self.tree = ttk.Treeview(self.history_tab, columns=("timestamp", "text"), show="headings")
+        self.tree = ttk.Treeview(self.history_tab, columns=("timestamp", "husky_id", "event_text"), show="headings")
         self.tree.heading("timestamp", text="Timestamp")
-        self.tree.heading("text", text="Transcribed Text")
-
-        self.tree.column("timestamp", width=180)
-        self.tree.column("text", width=400)
-
+        self.tree.heading("husky_id", text="ID")
+        self.tree.heading("event_text", text="Event Text")
+        
+        self.tree.column("timestamp", width=160)
+        self.tree.column("husky_id", width=60)
+        self.tree.column("event_text", width=400)
+        
         self.tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.tree.bind("<Double-1>", self.show_popup)
 
         self.current_text = ""
         self.load_history()
@@ -127,7 +155,7 @@ class LookingGlass:
             combined_text = f"{mapping['prompt']} {self.current_text}"
     
             # Save only the original input for now (LLM will come later)
-            save_to_csv(self.current_text)
+            save_to_csv(self.current_text, husky_id)
     
             self.label.config(text=f"Saved with ID {husky_id} ({mapping['color']})")
             self.transcription.config(text="")
@@ -147,8 +175,10 @@ class LookingGlass:
     def load_history(self):
         for row in self.tree.get_children():
             self.tree.delete(row)
-        for timestamp, text in load_csv_history():
-            self.tree.insert("", tk.END, values=(timestamp, text))
+        for record in load_csv_history():
+            if len(record) >= 3:
+                timestamp, husky_id, event_text = record
+                self.tree.insert("", tk.END, values=(timestamp, husky_id, event_text))
 
     def run(self):
         self.root.mainloop()

@@ -1,10 +1,12 @@
 import openai
 import os
+from dotenv import load_dotenv
 
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def ask_AliN(full_prompt):
-    response = client.chat.completions.create(
+    response = openai.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "Respond clearly and creatively."},

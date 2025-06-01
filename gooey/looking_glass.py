@@ -104,16 +104,35 @@ class LookingGlass:
         row = self.response_tree.item(selected[0], 'values')
         if not row or len(row) < 3:
             return
-
+    
         event_text, husky_id, response = row
-
+    
         popup = tk.Toplevel(self.root)
         popup.title("LLM Response")
-        popup.geometry("500x400")
+        popup.geometry("600x500")
+    
+        text_frame = tk.Frame(popup)
+        text_frame.pack(fill=tk.BOTH, expand=True)
+    
+        scrollbar = tk.Scrollbar(text_frame)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    
+        text_widget = tk.Text(text_frame, wrap=tk.WORD, yscrollcommand=scrollbar.set)
+        text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    
+        content = f"""Husky ID: {husky_id}
+    
+    Event Text:
+    {event_text}
+    
+    LLM Response:
+    {response}
+    """
+        text_widget.insert(tk.END, content)
+        text_widget.config(state=tk.DISABLED)
+    
+        scrollbar.config(command=text_widget.yview)
 
-        text = f"""🧠 Husky ID: {husky_id}\n\n📄 Event Text:\n{event_text}\n\n📝 LLM Response:\n{response}"""
-        label = tk.Label(popup, text=text, justify="left", anchor="w", wraplength=480)
-        label.pack(padx=10, pady=10)
 
     def __init__(self):
         self.root = tk.Tk()

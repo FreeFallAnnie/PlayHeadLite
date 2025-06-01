@@ -24,6 +24,7 @@ venv/
 .vscode/
 .idea/
 *.code-workspace
+model/
 
 # OS breadcrumbs
 .DS_Store

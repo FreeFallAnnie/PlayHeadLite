@@ -11,6 +11,8 @@ import os
 from datetime import datetime
 from vosk import Model, KaldiRecognizer
 import openai
+from dotenv import load_dotenv
+load_dotenv()
 
 # ──────────────────────────────────────
 # SET YOUR OPENAI API KEY

@@ -16,13 +16,18 @@ load_dotenv(dotenv_path=env_path)
 api_key = os.getenv("OPENAI_API_KEY")
 
 if not api_key:
-    raise ValueError("❌ OPENAI_API_KEY not found in .env file or environment.")
+    raise ValueError("OPENAI_API_KEY not found in .env file or environment.")
 
 # Initialize OpenAI client
-client = openai.OpenAI(api_key=api_key)
+org_id = os.getenv("OPENAI_ORG_ID")
+
+if not org_id:
+    raise ValueError("OPENAI_ORG_ID not found in .env file.")
+
+client = openai.OpenAI(api_key=api_key, organization=org_id)
 
 # Optional: debug the key (safe)
-print("✅ OpenAI API key loaded. Starts with:", api_key[:8], "...")
+print("OpenAI API key loaded. Starts with:", api_key[:8], "...")
 
 
 from pathlib import Path

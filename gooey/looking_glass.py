@@ -78,10 +78,10 @@ class LookingGlass:
         self.tab_control.add(self.history_tab, text='View History')
         self.tab_control.pack(expand=1, fill="both")
 
-        self.label = tk.Label(self.input_tab, text="Share an everyday event. Press Record to begin!", font=("Helvetica", 16))
+        self.label = tk.Label(self.input_tab, text="Press Record to begin!", font=("Helvetica", 16))
         self.label.pack(pady=20)
 
-        self.record_btn = tk.Button(self.input_tab, text="🎧 Record Event", command=self.record_audio)
+        self.record_btn = tk.Button(self.input_tab, text="Record an everyday event", command=self.record_audio)
         self.record_btn.pack(pady=10)
 
         self.keep_btn = tk.Button(self.input_tab, text="Keep", command=self.keep_text, state='disabled')

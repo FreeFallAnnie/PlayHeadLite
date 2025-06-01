@@ -13,6 +13,7 @@ import os
 import sqlite3
 
 ARCHIVE_CSV = os.path.join(os.path.dirname(__file__), '..', 'archive', 'everyday.csv')
+DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'archive', 'how_far_we_come.db')
 
 q = queue.Queue()
 def load_husky_map(path=os.path.join(os.path.dirname(__file__), '..', 'archive', 'husky_map.csv')):
@@ -21,7 +22,7 @@ def load_husky_map(path=os.path.join(os.path.dirname(__file__), '..', 'archive',
         reader = csv.DictReader(f)
         for row in reader:
             husky_map[int(row['ID'])] = {
-                'prompt': row['Agent_LLM'],
+                'prompt': row['prompt'],
                 'color': row['Color'].upper()
             }
     return husky_map
@@ -60,9 +61,21 @@ def load_csv_history():
     try:
         with open(ARCHIVE_CSV, newline='', encoding='utf-8') as f:
             reader = csv.reader(f)
-            return list(reader)[-50:]  # limit to last 50 entries
+            return list(reader)[-50:]
     except Exception as e:
         print(f"Error reading history: {e}")
+        return []
+
+def load_response_history():
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT event_text, husky_id, response FROM reflections ORDER BY id DESC LIMIT 50")
+        rows = cursor.fetchall()
+        conn.close()
+        return rows
+    except Exception as e:
+        print("Error loading responses:", e)
         return []
 
 class LookingGlass:
@@ -73,24 +86,35 @@ class LookingGlass:
         row = self.tree.item(selected[0], 'values')
         if not row or len(row) < 3:
             return
-    
+
         timestamp, husky_id, event_text = row
-    
+
         popup = tk.Toplevel(self.root)
         popup.title("Full Entry")
         popup.geometry("500x300")
-    
-        full_text = f"""Timestamp: {timestamp}
-    Husky ID: {husky_id}
-    
-    Event Text:
-    {event_text}
-    """
-    
+
+        full_text = f"""Timestamp: {timestamp}\nHusky ID: {husky_id}\n\nEvent Text:\n{event_text}"""
         label = tk.Label(popup, text=full_text, justify="left", anchor="w", wraplength=480)
         label.pack(padx=10, pady=10)
 
-    
+    def show_response_popup(self, event):
+        selected = self.response_tree.selection()
+        if not selected:
+            return
+        row = self.response_tree.item(selected[0], 'values')
+        if not row or len(row) < 3:
+            return
+
+        event_text, husky_id, response = row
+
+        popup = tk.Toplevel(self.root)
+        popup.title("LLM Response")
+        popup.geometry("500x400")
+
+        text = f"""🧠 Husky ID: {husky_id}\n\n📄 Event Text:\n{event_text}\n\n📝 LLM Response:\n{response}"""
+        label = tk.Label(popup, text=text, justify="left", anchor="w", wraplength=480)
+        label.pack(padx=10, pady=10)
+
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Looking Glass")
@@ -98,9 +122,11 @@ class LookingGlass:
         self.tab_control = ttk.Notebook(self.root)
         self.input_tab = tk.Frame(self.tab_control)
         self.history_tab = tk.Frame(self.tab_control)
+        self.response_tab = tk.Frame(self.tab_control)
 
         self.tab_control.add(self.input_tab, text='Record + Label')
         self.tab_control.add(self.history_tab, text='View History')
+        self.tab_control.add(self.response_tab, text='LLM Responses')
         self.tab_control.pack(expand=1, fill="both")
 
         self.label = tk.Label(self.input_tab, text="Press Record to begin!", font=("Helvetica", 16))
@@ -121,16 +147,25 @@ class LookingGlass:
         self.tree.heading("timestamp", text="Timestamp")
         self.tree.heading("husky_id", text="ID")
         self.tree.heading("event_text", text="Event Text")
-        
         self.tree.column("timestamp", width=160)
         self.tree.column("husky_id", width=60)
         self.tree.column("event_text", width=400)
-        
         self.tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         self.tree.bind("<Double-1>", self.show_popup)
 
+        self.response_tree = ttk.Treeview(self.response_tab, columns=("event_text", "husky_id", "response"), show="headings")
+        self.response_tree.heading("event_text", text="Event Text")
+        self.response_tree.heading("husky_id", text="ID")
+        self.response_tree.heading("response", text="LLM Response")
+        self.response_tree.column("event_text", width=250)
+        self.response_tree.column("husky_id", width=50)
+        self.response_tree.column("response", width=400)
+        self.response_tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.response_tree.bind("<Double-1>", self.show_response_popup)
+
         self.current_text = ""
         self.load_history()
+        self.load_response_history()
 
     def record_audio(self):
         self.label.config(text="Recording for 10 seconds...")
@@ -147,16 +182,10 @@ class LookingGlass:
             if husky_id is None:
                 self.label.config(text="Input cancelled.")
                 return
-    
+
             husky_map = load_husky_map()
             mapping = husky_map.get(husky_id, {'prompt': 'Describe this.', 'color': 'BLUE'})
-    
-            # Combine prompt + transcribed input
-            combined_text = f"{mapping['prompt']} {self.current_text}"
-    
-            # Save only the original input for now (LLM will come later)
             save_to_csv(self.current_text, husky_id)
-    
             self.label.config(text=f"Saved with ID {husky_id} ({mapping['color']})")
             self.transcription.config(text="")
             self.keep_btn.config(state='disabled')
@@ -165,7 +194,7 @@ class LookingGlass:
         except Exception as e:
             print("Error during keep:", e)
             self.label.config(text="Error while saving.")
-            
+
     def discard_text(self):
         self.label.config(text="Your event has not been kept.")
         self.transcription.config(text="")
@@ -179,6 +208,14 @@ class LookingGlass:
             if len(record) >= 3:
                 timestamp, husky_id, event_text = record
                 self.tree.insert("", tk.END, values=(timestamp, husky_id, event_text))
+
+    def load_response_history(self):
+        for row in self.response_tree.get_children():
+            self.response_tree.delete(row)
+        for record in load_response_history():
+            if len(record) >= 3:
+                event_text, husky_id, response = record
+                self.response_tree.insert("", tk.END, values=(event_text, husky_id, response))
 
     def run(self):
         self.root.mainloop()

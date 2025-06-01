@@ -1,23 +1,29 @@
 import csv
 import sqlite3
 from pathlib import Path
+import pandas as pd
+import openai
 from dotenv import load_dotenv
 import os
-import pandas as pd
 
-# Try importing OpenAI, but skip if not installed (for current environment)
-try:
-    import openai
-    openai_available = True
-except ImportError:
-    openai_available = False
+from pathlib import Path
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from .env
+env_path = Path(__file__).resolve().parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
-# If OpenAI is available, initialize client
-if openai_available:
-    client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Get the API key from environment
+api_key = os.getenv("OPENAI_API_KEY")
+
+if not api_key:
+    raise ValueError("❌ OPENAI_API_KEY not found in .env file or environment.")
+
+# Initialize OpenAI client
+client = openai.OpenAI(api_key=api_key)
+
+# Optional: debug the key (safe)
+print("✅ OpenAI API key loaded. Starts with:", api_key[:8], "...")
+
 
 from pathlib import Path
 
@@ -88,12 +94,12 @@ husky_map = load_husky_map(husky_map_csv)
 x_prompt = "Reflect on this event with insight."
 husky_prompt = husky_map.get(husky_id, "Describe this.")
 
-if event_text and husky_id != -1 and openai_available:
+if event_text and husky_id != -1:
     full_prompt, response = ask_AliN(x_prompt, husky_prompt, event_text)
     save_to_db(db_path, event_text, husky_id, full_prompt, response)
     result = {"prompt": full_prompt, "response": response}
 else:
-    result = {"error": "Missing input, husky ID, or OpenAI not available."}
+    result = {"error": "Missing input or husky ID."}
 
 if "response" in locals():
     print("Saved to how_far_we_come.db:")

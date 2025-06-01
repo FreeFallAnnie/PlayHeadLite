@@ -6,7 +6,7 @@ import time
 import os
 
 # Replace with your Bluefruit’s MAC address
-BLUEFRUIT_MAC_ADDRESS = "AA:BB:CC:DD:EE:FF"
+BLUEFRUIT_MAC_ADDRESS = "CB:05:EE:BF:EB:03"
 UART_RX_CHAR_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
 
 # BLE: Send a color command

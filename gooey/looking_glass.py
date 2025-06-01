@@ -22,7 +22,7 @@ def load_husky_map(path=os.path.join(os.path.dirname(__file__), '..', 'archive',
         reader = csv.DictReader(f)
         for row in reader:
             husky_map[int(row['ID'])] = {
-                'prompt': row['prompt'],
+                'prompt': row['Prompt'],
                 'color': row['Color'].upper()
             }
     return husky_map

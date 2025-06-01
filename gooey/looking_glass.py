@@ -10,14 +10,14 @@ import time
 import os
 from datetime import datetime
 from vosk import Model, KaldiRecognizer
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
 load_dotenv()
 
 # ──────────────────────────────────────
 # SET YOUR OPENAI API KEY
 # ──────────────────────────────────────
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI()
 
 # ──────────────────────────────────────
 # AUDIO TRANSCRIPTION + CSV LOGGING
@@ -90,7 +90,7 @@ def save_to_db(user_input, husky_id, response, color, db_path="how_far_we_come.d
     conn.close()
 
 def ask_AliN(full_prompt):
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "Respond clearly and creatively."},
@@ -98,7 +98,6 @@ def ask_AliN(full_prompt):
         ],
         temperature=0.7
     )
-    # For new SDK: extract the message like this
     return response.choices[0].message.content.strip()
 
 def ali_start_callback(user_input, husky_id, decision):

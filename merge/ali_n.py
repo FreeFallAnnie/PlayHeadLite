@@ -19,34 +19,28 @@ load_dotenv()
 if openai_available:
     client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Define paths
-archive_dir = Path("archive")
+from pathlib import Path
+
+# Set base directory as the parent of 'merge/'
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+archive_dir = BASE_DIR / "archive"
 everyday_csv = archive_dir / "everyday.csv"
-husky_csv = archive_dir / "husky_retrieved.csv"
 husky_map_csv = archive_dir / "husky_map.csv"
 db_path = archive_dir / "how_far_we_come.db"
 
 # Load last user input from everyday.csv
-def get_last_input(csv_path):
+def get_last_event_and_id(csv_path):
     try:
         with open(csv_path, newline='', encoding='utf-8') as f:
             rows = list(csv.reader(f))
             if rows:
-                return rows[-1][1]  # assuming column 1 is the user input
+                last_row = rows[-1]
+                if len(last_row) >= 3:
+                    return last_row[2], int(last_row[1])  # event_text, husky_id
     except Exception as e:
         print(f"Error reading {csv_path}: {e}")
-    return ""
-
-# Load last Husky ID from husky_retrieved.csv
-def get_last_husky_id(csv_path):
-    try:
-        with open(csv_path, newline='', encoding='utf-8') as f:
-            rows = list(csv.reader(f))
-            if rows:
-                return int(rows[-1][1])  # assuming column 1 is the Husky ID
-    except Exception as e:
-        print(f"Error reading {csv_path}: {e}")
-    return -1
+    return "", -1
 
 # Load husky_map from CSV
 def load_husky_map(csv_path):
@@ -61,8 +55,8 @@ def load_husky_map(csv_path):
     return mapping
 
 # Combine prompts and generate response
-def ask_AliN(x_prompt, husky_prompt, user_input):
-    full_prompt = f"{x_prompt} {husky_prompt} {user_input}"
+def ask_AliN(x_prompt, husky_prompt, event_text):
+    full_prompt = f"{x_prompt} {husky_prompt} {event_text}"
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
@@ -74,32 +68,35 @@ def ask_AliN(x_prompt, husky_prompt, user_input):
     return full_prompt, response.choices[0].message.content.strip()
 
 # Save to SQLite DB
-def save_to_db(db_file, user_input, husky_id, full_prompt, response):
+def save_to_db(db_file, event_text, husky_id, full_prompt, response):
     conn = sqlite3.connect(db_file)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS reflections
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  user_input TEXT,
+                  event_text TEXT,
                   husky_id INTEGER,
                   full_prompt TEXT,
                   response TEXT)''')
-    c.execute("INSERT INTO reflections (user_input, husky_id, full_prompt, response) VALUES (?, ?, ?, ?)",
-              (user_input, husky_id, full_prompt, response))
+    c.execute("INSERT INTO reflections (event_text, husky_id, full_prompt, response) VALUES (?, ?, ?, ?)",
+              (event_text, husky_id, full_prompt, response))
     conn.commit()
     conn.close()
 
-# Run logic (skip OpenAI call if not installed)
-user_input = get_last_input(everyday_csv)
-husky_id = get_last_husky_id(husky_csv)
+# Run logic
+event_text, husky_id = get_last_event_and_id(everyday_csv)
 husky_map = load_husky_map(husky_map_csv)
 x_prompt = "Reflect on this event with insight."
 husky_prompt = husky_map.get(husky_id, "Describe this.")
 
-if user_input and husky_id != -1 and openai_available:
-    full_prompt, response = ask_AliN(x_prompt, husky_prompt, user_input)
-    save_to_db(db_path, user_input, husky_id, full_prompt, response)
+if event_text and husky_id != -1 and openai_available:
+    full_prompt, response = ask_AliN(x_prompt, husky_prompt, event_text)
+    save_to_db(db_path, event_text, husky_id, full_prompt, response)
     result = {"prompt": full_prompt, "response": response}
 else:
     result = {"error": "Missing input, husky ID, or OpenAI not available."}
 
-import ace_tools as tools; tools.display_dataframe_to_user(name="Ali_N Result", dataframe=pd.DataFrame([result]))
+if "response" in locals():
+    print("Saved to how_far_we_come.db:")
+    print(f"\nPrompt:\n{full_prompt}\n\nResponse:\n{response}")
+else:
+    print(result["error"])

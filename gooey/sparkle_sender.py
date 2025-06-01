@@ -41,23 +41,23 @@ def start_color_tracker():
     base_path = os.path.dirname(__file__)
     db_path = os.path.join(base_path, "..", "archive", "how_far_we_come.db")
 
-    print("🌈 Starting live sparkle tracker...")
+    print("Starting live sparkle tracker...")
     color_map = load_husky_map()
     last_row_count = 0
 
     while True:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM history")
+        cursor.execute("SELECT * FROM responses")
         rows = cursor.fetchall()
         conn.close()
 
         if len(rows) > last_row_count:
             new_rows = rows[last_row_count:]
             for row in new_rows:
-                husky_id = int(row[1])
+                husky_id = int(row[2])
                 color = color_map.get(husky_id, "OFF")
-                print(f"✨ New entry detected! ID: {husky_id} → Color: {color}")
+                print(f"New entry detected! ID: {husky_id} → Color: {color}")
                 send_sparkle(color)
                 time.sleep(2)
             last_row_count = len(rows)

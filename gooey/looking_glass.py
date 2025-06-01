@@ -137,11 +137,12 @@ class LookingGlass:
         except Exception as e:
             print("Error during keep:", e)
             self.label.config(text="Error while saving.")
-        def discard_text(self):
-            self.label.config(text="Input discarded.")
-            self.transcription.config(text="")
-            self.keep_btn.config(state='disabled')
-            self.discard_btn.config(state='disabled')
+            
+    def discard_text(self):
+        self.label.config(text="Input discarded.")
+        self.transcription.config(text="")
+        self.keep_btn.config(state='disabled')
+        self.discard_btn.config(state='disabled')
 
     def load_history(self):
         for row in self.tree.get_children():

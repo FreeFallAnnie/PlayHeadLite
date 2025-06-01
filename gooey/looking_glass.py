@@ -15,6 +15,16 @@ import sqlite3
 ARCHIVE_CSV = os.path.join(os.path.dirname(__file__), '..', 'archive', 'everyday.csv')
 
 q = queue.Queue()
+def load_husky_map(path=os.path.join(os.path.dirname(__file__), '..', 'archive', 'husky_map.csv')):
+    husky_map = {}
+    with open(path, newline='', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            husky_map[int(row['ID'])] = {
+                'prompt': row['Agent_LLM'],
+                'color': row['Color'].upper()
+            }
+    return husky_map
 
 def callback(indata, frames, time_info, status):
     if status:
@@ -104,18 +114,34 @@ class LookingGlass:
         self.discard_btn.config(state='normal')
 
     def keep_text(self):
-        save_to_csv(self.current_text)
-        self.label.config(text="Saved to everyday.csv")
-        self.transcription.config(text="")
-        self.keep_btn.config(state='disabled')
-        self.discard_btn.config(state='disabled')
-        self.load_history()
-
-    def discard_text(self):
-        self.label.config(text="Input discarded.")
-        self.transcription.config(text="")
-        self.keep_btn.config(state='disabled')
-        self.discard_btn.config(state='disabled')
+        try:
+            husky_id = tk.simpledialog.askinteger("Husky ID", "Enter HuskyLens ID:")
+            if husky_id is None:
+                self.label.config(text="Input cancelled.")
+                return
+    
+            husky_map = load_husky_map()
+            mapping = husky_map.get(husky_id, {'prompt': 'Describe this.', 'color': 'BLUE'})
+    
+            # Combine prompt + transcribed input
+            combined_text = f"{mapping['prompt']} {self.current_text}"
+    
+            # Save only the original input for now (LLM will come later)
+            save_to_csv(self.current_text)
+    
+            self.label.config(text=f"Saved with ID {husky_id} ({mapping['color']})")
+            self.transcription.config(text="")
+            self.keep_btn.config(state='disabled')
+            self.discard_btn.config(state='disabled')
+            self.load_history()
+        except Exception as e:
+            print("Error during keep:", e)
+            self.label.config(text="Error while saving.")
+        def discard_text(self):
+            self.label.config(text="Input discarded.")
+            self.transcription.config(text="")
+            self.keep_btn.config(state='disabled')
+            self.discard_btn.config(state='disabled')
 
     def load_history(self):
         for row in self.tree.get_children():

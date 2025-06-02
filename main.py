@@ -1,39 +1,52 @@
 # main.py
+
 from dotenv import load_dotenv
 load_dotenv()
+
 from gooey.looking_glass import LookingGlass
 from merge.x_marks import load_XMarks, get_Sparkle
 from merge.ali_n import ask_AliN
 from gooey.sparkle_sender import send_sparkle
 import sqlite3
 import datetime
+import os
 
-# Load the CSV map from archive
-prompt_map = load_XMarks("archive/husky_map.csv")
+# Load context map
+prompt_map = load_XMarks(os.path.join("archive", "husky_map.csv"))
 
-# Connect to SQLite database
-db = sqlite3.connect("archive/how_far_we_come.db")
+# Set up SQLite DB
+db_path = os.path.join("archive", "how_far_we_come.db")
+db = sqlite3.connect(db_path)
 cursor = db.cursor()
 cursor.execute('''CREATE TABLE IF NOT EXISTS history (
-                    timestamp TEXT,
-                    user_input TEXT,
-                    agent_prompt TEXT,
-                    ai_response TEXT,
-                    color TEXT
-                )''')
+    timestamp TEXT,
+    user_input TEXT,
+    agent_prompt TEXT,
+    ai_response TEXT,
+    color TEXT
+)''')
 db.commit()
 
-# GUI sends input and decision here
-def handle_user_choice(user_input, husky_id, decision):
+# This function is called ONLY when "Keep" is pressed
+def handle_user_choice(user_input, husky_id):
+    # Step 1: Get mapped context prompt + color
     agent_prompt, color = get_Sparkle(prompt_map, husky_id)
+
+    # Step 2: Construct the full prompt and call the LLM
     full_prompt = f"{agent_prompt} User said: {user_input}"
     ai_response = ask_AliN(full_prompt)
-    send_sparkle(color)  # BLE color call
+
+    # Step 3: Send color to LED via Bluefruit
+    send_sparkle(color)
+
+    # Step 4: Save to database
     timestamp = datetime.datetime.now().isoformat()
     cursor.execute("INSERT INTO history VALUES (?, ?, ?, ?, ?)",
                    (timestamp, user_input, agent_prompt, ai_response, color))
     db.commit()
+
+    # Step 5: Return to GUI (to display)
     return ai_response, color
 
-# Launch GUI loop
+# Start GUI loop with callback for keep button
 LookingGlass(start_callback=handle_user_choice).run()

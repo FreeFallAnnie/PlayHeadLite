@@ -72,7 +72,7 @@ def load_response_history():
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute("SELECT full_prompt, response FROM reflections ORDER BY id DESC LIMIT 50")
+        cursor.execute("SELECT husky_id, response FROM reflections ORDER BY id DESC LIMIT 50")
         rows = cursor.fetchall()
         conn.close()
         return rows
@@ -143,8 +143,8 @@ Response:
         self.history_tab = tk.Frame(self.tab_control)
         self.response_tab = tk.Frame(self.tab_control)
 
-        self.tab_control.add(self.input_tab, text='Record your Everyday')
-        self.tab_control.add(self.history_tab, text='Your Everydays')
+        self.tab_control.add(self.input_tab, text='Record')
+        self.tab_control.add(self.history_tab, text='your Everyday')
         self.tab_control.add(self.response_tab, text='with Wonder!')
         self.tab_control.pack(expand=1, fill="both")
 
@@ -167,19 +167,17 @@ Response:
         self.transcription.pack(pady=20)
 
         self.tree = ttk.Treeview(self.history_tab, columns=("timestamp", "husky_id", "event_text"), show="headings")
-        self.tree.heading("timestamp", text="Timestamp")
-        self.tree.heading("husky_id", text="ID")
-        self.tree.heading("event_text", text="Event Text")
+        self.tree.heading("timestamp", text="Time to")
+        self.tree.heading("husky_id", text="Spark")
+        self.tree.heading("event_text", text="the Everyday")
         self.tree.column("timestamp", width=160)
         self.tree.column("husky_id", width=60)
         self.tree.column("event_text", width=400)
         self.tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         self.tree.bind("<Double-1>", self.show_popup)
 
-        self.response_tree = ttk.Treeview(self.response_tab, columns=("full_prompt", "response"), show="headings")
-        self.response_tree.heading("full_prompt", text="Prompt")
-        self.response_tree.heading("response", text="LLM Response")
-        self.response_tree.column("full_prompt", width=300)
+        self.response_tree = ttk.Treeview(self.response_tab, columns=("response",), show="headings")
+        self.response_tree.heading("response", text="WonderSparked")
         self.response_tree.column("response", width=500)
         self.response_tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         self.response_tree.bind("<Double-1>", self.show_response_popup)
@@ -222,7 +220,7 @@ Response:
                 self.label.config(text=(
                     f"WonderSparked!\n"
                     f"{ai_response[:80]}\n"
-                    f"Color: {color} — explore the other pages to see."
+                    f"Color: {color} \n Explore the other pages to see."
                 ))
             else:
                 self.label.config(text=f"Saved with ID {husky_id} ({mapping['color']})")
@@ -261,8 +259,14 @@ Response:
             self.response_tree.delete(row)
         for record in load_response_history():
             if len(record) >= 2:
-                full_prompt, response = record
-                self.response_tree.insert("", tk.END, values=(full_prompt, response))
+                husky_id, response = record
+                try:
+                    husky_id_int = int(husky_id)
+                    color = self.husky_map.get(husky_id_int, {}).get("color", "UNKNOWN")
+                except (ValueError, TypeError):
+                    color = "UNKNOWN"
+                self.response_tree.insert("", tk.END, values=(response,), tags=(color,))
+
 
     def run(self):
         self.root.mainloop()

@@ -63,6 +63,7 @@ def load_csv_history():
     try:
         with open(ARCHIVE_CSV, newline='', encoding='utf-8') as f:
             reader = csv.reader(f)
+            next(reader, None)
             return list(reader)[-50:]
     except Exception as e:
         print(f"Error reading history: {e}")

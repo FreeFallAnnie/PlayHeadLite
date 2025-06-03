@@ -15,7 +15,9 @@ import os
 prompt_map = load_XMarks(os.path.join("archive", "husky_map.csv"))
 
 # Set up SQLite DB
-db_path = os.path.join("archive", "how_far_we_come.db")
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent
+db_path = BASE_DIR / "archive" / "how_far_we_come.db"
 db = sqlite3.connect(db_path)
 cursor = db.cursor()
 cursor.execute('''CREATE TABLE IF NOT EXISTS history (

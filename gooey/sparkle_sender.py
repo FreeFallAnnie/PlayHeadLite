@@ -1,29 +1,14 @@
-import asyncio
-from bleak import BleakClient
-import sqlite3
-import csv
+# sparkle_sender.py
+# BLE functionality removed — send_sparkle is now a stub
+
 import time
+import csv
 import os
+import sqlite3
 
-# Replace with your Bluefruit’s MAC address
-BLUEFRUIT_MAC_ADDRESS = "CB:05:EE:BF:EB:03"
-UART_RX_CHAR_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
-
-# BLE: Send a color command
+# Stub function to preserve compatibility
 def send_sparkle(color):
-    asyncio.run(_send_color(color))
-
-async def _send_color(color):
-    try:
-        async with BleakClient(BLUEFRUIT_MAC_ADDRESS) as client:
-            if await client.is_connected():
-                msg = color.upper().encode('utf-8')
-                await client.write_gatt_char(UART_RX_CHAR_UUID, msg)
-                print(f"[BLE] Sent color: {color}")
-            else:
-                print("[BLE] Could not connect to Bluefruit")
-    except Exception as e:
-        print(f"[BLE] Error: {e}")
+    print(f"[DISABLED BLE] Would send color: {color}")
 
 # CSV: Load Husky ID → Color map
 def load_husky_map():
@@ -36,19 +21,19 @@ def load_husky_map():
             id_to_color[int(row['ID'])] = row['Color'].upper()
     return id_to_color
 
-# DB Watcher: Live sparkle history
+# DB Watcher: Stubbed sparkle history for testing
 def start_color_tracker():
     base_path = os.path.dirname(__file__)
     db_path = os.path.join(base_path, "..", "archive", "how_far_we_come.db")
 
-    print("Starting live sparkle tracker...")
+    print("🧪 Starting sparkle tracker (BLE disabled)")
     color_map = load_husky_map()
     last_row_count = 0
 
     while True:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM responses")
+        cursor.execute("SELECT * FROM reflections")
         rows = cursor.fetchall()
         conn.close()
 
@@ -57,13 +42,13 @@ def start_color_tracker():
             for row in new_rows:
                 husky_id = int(row[2])
                 color = color_map.get(husky_id, "OFF")
-                print(f"New entry detected! ID: {husky_id} → Color: {color}")
+                print(f"[SPARKLE] ID: {husky_id} → Color: {color} (simulated)")
                 send_sparkle(color)
                 time.sleep(2)
             last_row_count = len(rows)
 
         time.sleep(1)
 
-# Run as standalone script
+# Run as standalone script (for testing)
 if __name__ == "__main__":
     start_color_tracker()

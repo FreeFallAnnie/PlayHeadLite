@@ -216,6 +216,7 @@ class LookingGlass:
             self.keep_btn.config(state='disabled')
             self.discard_btn.config(state='disabled')
             self.load_history()
+            self.load_response_history()
         except Exception as e:
             print("Error during keep:", e)
             self.label.config(text="Error while saving.")

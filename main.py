@@ -32,9 +32,9 @@ def handle_user_choice(user_input, husky_id):
     # Step 1: Get mapped context prompt + color
     agent_prompt, color = get_Sparkle(prompt_map, husky_id)
 
-    # Step 2: Construct the full prompt and call the LLM
-    full_prompt = f"{agent_prompt} User said: {user_input}"
-    ai_response = ask_AliN(full_prompt)
+    # Step 2: Call LLM
+    x_prompt = "Reflect on this event with insight."
+    full_prompt, ai_response = ask_AliN(x_prompt, agent_prompt, user_input)
 
     # Step 3: Send color to LED via Bluefruit
     send_sparkle(color)
@@ -49,4 +49,6 @@ def handle_user_choice(user_input, husky_id):
     return ai_response, color
 
 # Start GUI loop with callback for keep button
-LookingGlass(start_callback=handle_user_choice).run()
+if __name__ == "__main__":
+    LookingGlass(start_callback=handle_user_choice).run()
+

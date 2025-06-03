@@ -1,7 +1,7 @@
 import sqlite3
 import csv
 import time
-from gooey.sparkle_sender import send_sparkle
+# from gooey.sparkle_sender import send_sparkle  # 🔇 BLE disabled
 
 # Load Husky ID → Color map
 def load_husky_map(csv_path="archive/husky_map.csv"):
@@ -28,9 +28,9 @@ if __name__ == "__main__":
     color_map = load_husky_map()
     id_history = get_color_history()
 
-    print("🎨 Sending color history to Circuit Playground...")
+    print("🎨 (Simulated) Sending color history to Circuit Playground...")
     for husky_id in id_history:
         color = color_map.get(husky_id, "OFF")
         print(f"🟢 ID: {husky_id} → Color: {color}")
-        send_sparkle(color)
-        time.sleep(2)  # Pause to let color show
+        # send_sparkle(color)  # 🔇 BLE action disabled
+        time.sleep(2)  # Pause to simulate timing

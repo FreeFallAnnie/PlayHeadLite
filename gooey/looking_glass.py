@@ -134,7 +134,8 @@ class LookingGlass:
         scrollbar.config(command=text_widget.yview)
 
 
-    def __init__(self):
+    def __init__(self, start_callback=None):
+        self.start_callback = start_callback
         self.root = tk.Tk()
         self.root.title("Looking Glass")
 
@@ -205,7 +206,11 @@ class LookingGlass:
             husky_map = load_husky_map()
             mapping = husky_map.get(husky_id, {'prompt': 'Describe this.', 'color': 'BLUE'})
             save_to_csv(self.current_text, husky_id)
-            self.label.config(text=f"Saved with ID {husky_id} ({mapping['color']})")
+            if self.start_callback:
+                ai_response, color = self.start_callback(self.current_text, husky_id)
+                self.label.config(text=f"LLM says: {ai_response[:80]}... Color: {color}")
+            else:
+                self.label.config(text=f"Saved with ID {husky_id} ({mapping['color']})")
             self.transcription.config(text="")
             self.keep_btn.config(state='disabled')
             self.discard_btn.config(state='disabled')

@@ -189,7 +189,7 @@ class LookingGlass:
         self.load_response_history()
 
     def record_audio(self):
-        self.label.config(text="Recording for 10 seconds...")
+        self.label.config(text="I listen better when you wait for 3 seconds and keep the everyday event short and sweet!")
         self.root.update()
         self.current_text = recognize_from_mic()
         self.label.config(text="Finished Recording")

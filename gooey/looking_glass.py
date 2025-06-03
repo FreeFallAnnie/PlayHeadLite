@@ -33,13 +33,14 @@ def callback(indata, frames, time_info, status):
     q.put(bytes(indata))
 
 def recognize_from_mic(duration=10):
-    model = Model("model")
+    MODEL_PATH = os.path.join(os.path.dirname(__file__), "model")
+    model = Model(MODEL_PATH)
     rec = KaldiRecognizer(model, 16000)
     full_text = ""
 
     with sd.RawInputStream(samplerate=16000, blocksize=8000, dtype='int16',
                            channels=1, callback=callback):
-        print(f"Listening for {duration} seconds...")
+        print(f"I listen better when you wait for 3 seconds and keep the everyday event short and sweet!")
         start_time = time.time()
         while time.time() - start_time < duration:
             data = q.get()
@@ -91,7 +92,7 @@ class LookingGlass:
 
         popup = tk.Toplevel(self.root)
         popup.title("Full Entry")
-        popup.geometry("500x300")
+        popup.geometry("500x400")
 
         full_text = f"""Timestamp: {timestamp}\nHusky ID: {husky_id}\n\nEvent Text:\n{event_text}"""
         label = tk.Label(popup, text=full_text, justify="left", anchor="w", wraplength=480)
@@ -144,9 +145,9 @@ class LookingGlass:
         self.history_tab = tk.Frame(self.tab_control)
         self.response_tab = tk.Frame(self.tab_control)
 
-        self.tab_control.add(self.input_tab, text='Record + Label')
-        self.tab_control.add(self.history_tab, text='View History')
-        self.tab_control.add(self.response_tab, text='LLM Responses')
+        self.tab_control.add(self.input_tab, text='Record your Everyday')
+        self.tab_control.add(self.history_tab, text='Your Everydays')
+        self.tab_control.add(self.response_tab, text='with Wonder!')
         self.tab_control.pack(expand=1, fill="both")
 
         self.label = tk.Label(self.input_tab, text="Press Record to begin!", font=("Helvetica", 16))

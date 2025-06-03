@@ -72,7 +72,7 @@ def load_response_history():
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute("SELECT event_text, husky_id, response FROM reflections ORDER BY id DESC LIMIT 50")
+        cursor.execute("SELECT full_prompt, response FROM reflections ORDER BY id DESC LIMIT 50")
         rows = cursor.fetchall()
         conn.close()
         return rows
@@ -104,35 +104,32 @@ class LookingGlass:
         if not selected:
             return
         row = self.response_tree.item(selected[0], 'values')
-        if not row or len(row) < 3:
+        if not row or len(row) < 2:
             return
-    
-        event_text, husky_id, response = row
-    
+
+        full_prompt, response = row
+
         popup = tk.Toplevel(self.root)
         popup.title("LLM Response")
         popup.geometry("600x500")
-    
+
         text_frame = tk.Frame(popup)
         text_frame.pack(fill=tk.BOTH, expand=True)
-    
+
         scrollbar = tk.Scrollbar(text_frame)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-    
+
         text_widget = tk.Text(text_frame, wrap=tk.WORD, yscrollcommand=scrollbar.set)
         text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-    
-        content = f"""Husky ID: {husky_id}
-    
-Event Text:
-{event_text}
 
-LLM Response:
-{response}
-"""
+        content = f"""Prompt:
+{full_prompt}
+
+Response:
+{response}"""
         text_widget.insert(tk.END, content)
         text_widget.config(state=tk.DISABLED)
-    
+
         scrollbar.config(command=text_widget.yview)
 
     def __init__(self, start_callback=None):
@@ -175,13 +172,11 @@ LLM Response:
         self.tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         self.tree.bind("<Double-1>", self.show_popup)
 
-        self.response_tree = ttk.Treeview(self.response_tab, columns=("event_text", "husky_id", "response"), show="headings")
-        self.response_tree.heading("event_text", text="Event Text")
-        self.response_tree.heading("husky_id", text="ID")
+        self.response_tree = ttk.Treeview(self.response_tab, columns=("full_prompt", "response"), show="headings")
+        self.response_tree.heading("full_prompt", text="Prompt")
         self.response_tree.heading("response", text="LLM Response")
-        self.response_tree.column("event_text", width=250)
-        self.response_tree.column("husky_id", width=50)
-        self.response_tree.column("response", width=400)
+        self.response_tree.column("full_prompt", width=300)
+        self.response_tree.column("response", width=500)
         self.response_tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         self.response_tree.bind("<Double-1>", self.show_response_popup)
 
@@ -248,20 +243,15 @@ LLM Response:
                     color = self.husky_map.get(husky_id_int, {}).get("color", "UNKNOWN")
                 except (ValueError, TypeError):
                     color = "UNKNOWN"
-                self.tree.insert("", tk.END, values=(timestamp, "", event_text), tags=(color,))
+                self.tree.insert("", tk.END, values=(timestamp, husky_id, event_text), tags=(color,))
 
     def load_response_history(self):
         for row in self.response_tree.get_children():
             self.response_tree.delete(row)
         for record in load_response_history():
-            if len(record) >= 3:
-                event_text, husky_id, response = record
-                try:
-                    husky_id_int = int(husky_id)
-                    color = self.husky_map.get(husky_id_int, {}).get("color", "UNKNOWN")
-                except (ValueError, TypeError):
-                    color = "UNKNOWN"
-                self.response_tree.insert("", tk.END, values=(event_text, "", response), tags=(color,))
+            if len(record) >= 2:
+                full_prompt, response = record
+                self.response_tree.insert("", tk.END, values=(full_prompt, response))
 
     def run(self):
         self.root.mainloop()

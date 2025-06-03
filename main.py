@@ -37,7 +37,7 @@ def handle_user_choice(user_input, husky_id):
     full_prompt, ai_response = ask_AliN(x_prompt, agent_prompt, user_input)
 
     # Step 3: Send color to LED via Bluefruit
-    send_sparkle(color)
+    #send_sparkle(color)
 
     # Step 4: Save to database
     timestamp = datetime.datetime.now().isoformat()

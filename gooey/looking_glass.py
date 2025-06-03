@@ -129,7 +129,7 @@ class LookingGlass:
         scrollbar.config(command=text_widget.yview)
 
 Response:
-{response}"""
+{response}""
         text_widget.insert(tk.END, content)
         text_widget.config(state=tk.DISABLED)
 

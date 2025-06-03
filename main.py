@@ -5,7 +5,7 @@ load_dotenv()
 
 from gooey.looking_glass import LookingGlass
 from merge.x_marks import load_XMarks, get_Sparkle
-from merge.ali_n import ask_AliN
+from merge.ali_n import ask_AliN, save_to_db
 #from gooey.sparkle_sender import send_sparkle
 import sqlite3
 import datetime
@@ -33,12 +33,15 @@ def handle_user_choice(user_input, husky_id):
     agent_prompt, color = get_Sparkle(prompt_map, husky_id)
 
     # Step 2: Call LLM
-    x_prompt = "Reflect on this event with insight."
+    x_prompt = "Spark wonder in this event - keep it short."
     full_prompt, ai_response = ask_AliN(x_prompt, agent_prompt, user_input)
 
     # Step 3: Send color to LED via Bluefruit
     #send_sparkle(color)
-
+    
+    # Step 3: Save to reflections table (for third tab)
+    save_to_db(db_path, user_input, husky_id, full_prompt, ai_response)
+    
     # Step 4: Save to database
     timestamp = datetime.datetime.now().isoformat()
     cursor.execute("INSERT INTO history VALUES (?, ?, ?, ?, ?)",

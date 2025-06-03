@@ -128,13 +128,6 @@ class LookingGlass:
     
         scrollbar.config(command=text_widget.yview)
 
-Response:
-{response}""
-        text_widget.insert(tk.END, content)
-        text_widget.config(state=tk.DISABLED)
-
-        scrollbar.config(command=text_widget.yview)
-
     def __init__(self, start_callback=None):
         self.start_callback = start_callback
         self.root = tk.Tk()

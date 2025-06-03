@@ -6,7 +6,7 @@ def load_XMarks(csv_path):
         reader = csv.DictReader(f)
         for row in reader:
             palette[int(row['ID'])] = {
-                'prompt': row['Agent_LLM'],
+                'prompt': row['Prompt'],
                 'color': row['Color'].upper()
             }
     return palette

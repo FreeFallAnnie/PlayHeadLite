@@ -150,14 +150,18 @@ Response:
 
         self.label = tk.Label(self.input_tab, text="Press Record to begin!", font=("Helvetica", 16))
         self.label.pack(pady=20)
-
+        
         self.record_btn = tk.Button(self.input_tab, text="Record an everyday event", command=self.record_audio)
         self.record_btn.pack(pady=10)
-
-        self.keep_btn = tk.Button(self.input_tab, text="Keep", command=self.keep_text, state='disabled')
-        self.discard_btn = tk.Button(self.input_tab, text="Discard", command=self.discard_text, state='disabled')
-        self.keep_btn.pack(side=tk.LEFT, padx=10, pady=10)
-        self.discard_btn.pack(side=tk.RIGHT, padx=10, pady=10)
+        
+        button_frame = tk.Frame(self.input_tab)
+        button_frame.pack(pady=10)
+        
+        self.keep_btn = tk.Button(button_frame, text="Keep", command=self.keep_text, state='disabled')
+        self.keep_btn.pack(side=tk.LEFT, padx=10)
+        
+        self.discard_btn = tk.Button(button_frame, text="Discard", command=self.discard_text, state='disabled')
+        self.discard_btn.pack(side=tk.LEFT, padx=10)
 
         self.transcription = tk.Label(self.input_tab, text="", wraplength=500, justify="left")
         self.transcription.pack(pady=20)
@@ -197,7 +201,7 @@ Response:
         self.label.config(text="I listen better when you wait for 3 seconds and keep the everyday event short and sweet!")
         self.root.update()
         self.current_text = recognize_from_mic()
-        self.label.config(text="Finished Recording")
+        self.label.config(text="Finished Recording! wait a moment before navigating between pages.")
         self.transcription.config(text=self.current_text)
         self.keep_btn.config(state='normal')
         self.discard_btn.config(state='normal')
@@ -212,16 +216,23 @@ Response:
             husky_map = load_husky_map()
             mapping = husky_map.get(husky_id, {'prompt': 'Describe this.', 'color': 'BLUE'})
             save_to_csv(self.current_text, husky_id)
+            
             if self.start_callback:
                 ai_response, color = self.start_callback(self.current_text, husky_id)
-                self.label.config(text=f"LLM says: {ai_response[:80]}... Color: {color}")
+                self.label.config(text=(
+                    f"WonderSparked!\n"
+                    f"{ai_response[:80]}\n"
+                    f"Color: {color} — explore the other pages to see."
+                ))
             else:
                 self.label.config(text=f"Saved with ID {husky_id} ({mapping['color']})")
+            
             self.transcription.config(text="")
             self.keep_btn.config(state='disabled')
             self.discard_btn.config(state='disabled')
             self.load_history()
             self.load_response_history()
+
         except Exception as e:
             print("Error during keep:", e)
             self.label.config(text="Error while saving.")

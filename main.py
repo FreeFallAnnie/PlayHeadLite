@@ -6,7 +6,7 @@ load_dotenv()
 from gooey.looking_glass import LookingGlass
 from merge.x_marks import load_XMarks, get_Sparkle
 from merge.ali_n import ask_AliN
-from gooey.sparkle_sender import send_sparkle
+#from gooey.sparkle_sender import send_sparkle
 import sqlite3
 import datetime
 import os

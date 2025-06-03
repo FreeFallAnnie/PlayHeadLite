@@ -104,26 +104,29 @@ class LookingGlass:
         if not selected:
             return
         row = self.response_tree.item(selected[0], 'values')
-        if not row or len(row) < 2:
+        if not row or len(row) < 1:
             return
-
-        full_prompt, response = row
-
+    
+        response = row[0]
+    
         popup = tk.Toplevel(self.root)
-        popup.title("LLM Response")
+        popup.title("WonderSparked Response")
         popup.geometry("600x500")
-
+    
         text_frame = tk.Frame(popup)
         text_frame.pack(fill=tk.BOTH, expand=True)
-
+    
         scrollbar = tk.Scrollbar(text_frame)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
+    
         text_widget = tk.Text(text_frame, wrap=tk.WORD, yscrollcommand=scrollbar.set)
         text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-        content = f"""Prompt:
-{full_prompt}
+    
+        content = f"{response}"
+        text_widget.insert(tk.END, content)
+        text_widget.config(state=tk.DISABLED)
+    
+        scrollbar.config(command=text_widget.yview)
 
 Response:
 {response}"""

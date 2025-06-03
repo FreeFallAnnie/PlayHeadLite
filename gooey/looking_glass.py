@@ -58,7 +58,7 @@ def save_to_csv(event_text, husky_id):
     with open(ARCHIVE_CSV, mode='a', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow([timestamp, husky_id, event_text])
-        
+
 def load_csv_history():
     try:
         with open(ARCHIVE_CSV, newline='', encoding='utf-8') as f:
@@ -72,7 +72,7 @@ def load_response_history():
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute("SELECT full_prompt, response FROM reflections ORDER BY id DESC LIMIT 50")
+        cursor.execute("SELECT agent_prompt, user_input, response, husky_id FROM reflections ORDER BY id DESC LIMIT 50")
         rows = cursor.fetchall()
         conn.close()
         return rows
@@ -104,10 +104,10 @@ class LookingGlass:
         if not selected:
             return
         row = self.response_tree.item(selected[0], 'values')
-        if not row or len(row) < 2:
+        if not row or len(row) < 4:
             return
 
-        full_prompt, response = row
+        agent_prompt, user_input, response, husky_id = row
 
         popup = tk.Toplevel(self.root)
         popup.title("LLM Response")
@@ -123,7 +123,10 @@ class LookingGlass:
         text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         content = f"""Prompt:
-{full_prompt}
+{agent_prompt}
+
+User said:
+{user_input}
 
 Response:
 {response}"""
@@ -136,6 +139,7 @@ Response:
         self.start_callback = start_callback
         self.root = tk.Tk()
         self.root.title("Looking Glass")
+        self.root.geometry("1200x900")
         self.husky_map = load_husky_map()
 
         self.tab_control = ttk.Notebook(self.root)
@@ -172,11 +176,15 @@ Response:
         self.tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         self.tree.bind("<Double-1>", self.show_popup)
 
-        self.response_tree = ttk.Treeview(self.response_tab, columns=("full_prompt", "response"), show="headings")
-        self.response_tree.heading("full_prompt", text="Prompt")
+        self.response_tree = ttk.Treeview(self.response_tab, columns=("agent_prompt", "user_input", "response", "husky_id"), show="headings")
+        self.response_tree.heading("agent_prompt", text="Prompt")
+        self.response_tree.heading("user_input", text="User Input")
         self.response_tree.heading("response", text="LLM Response")
-        self.response_tree.column("full_prompt", width=300)
+        self.response_tree.heading("husky_id", text="ID")
+        self.response_tree.column("agent_prompt", width=300)
+        self.response_tree.column("user_input", width=300)
         self.response_tree.column("response", width=500)
+        self.response_tree.column("husky_id", width=50)
         self.response_tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         self.response_tree.bind("<Double-1>", self.show_response_popup)
 
@@ -197,7 +205,7 @@ Response:
         self.label.config(text="I listen better when you wait for 3 seconds and keep the everyday event short and sweet!")
         self.root.update()
         self.current_text = recognize_from_mic()
-        self.label.config(text="Finished Recording")
+        self.label.config(text="Finished recording. wait a moment before visiting the other pages.")
         self.transcription.config(text=self.current_text)
         self.keep_btn.config(state='normal')
         self.discard_btn.config(state='normal')
@@ -214,7 +222,7 @@ Response:
             save_to_csv(self.current_text, husky_id)
             if self.start_callback:
                 ai_response, color = self.start_callback(self.current_text, husky_id)
-                self.label.config(text=f"LLM says: {ai_response[:80]}... Color: {color}")
+                self.label.config(text=f"Check with wonder! {ai_response[:80]}... Color: {color}")
             else:
                 self.label.config(text=f"Saved with ID {husky_id} ({mapping['color']})")
             self.transcription.config(text="")
@@ -249,9 +257,14 @@ Response:
         for row in self.response_tree.get_children():
             self.response_tree.delete(row)
         for record in load_response_history():
-            if len(record) >= 2:
-                full_prompt, response = record
-                self.response_tree.insert("", tk.END, values=(full_prompt, response))
+            if len(record) >= 4:
+                agent_prompt, user_input, response, husky_id = record
+                try:
+                    husky_id_int = int(husky_id)
+                    color = self.husky_map.get(husky_id_int, {}).get("color", "UNKNOWN")
+                except (ValueError, TypeError):
+                    color = "UNKNOWN"
+                self.response_tree.insert("", tk.END, values=(agent_prompt, user_input, response, husky_id), tags=(color,))
 
     def run(self):
         self.root.mainloop()

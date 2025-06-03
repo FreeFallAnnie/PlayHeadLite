@@ -94,20 +94,21 @@ def save_to_db(db_file, event_text, husky_id, full_prompt, response):
     conn.close()
 
 # Run logic
-event_text, husky_id = get_last_event_and_id(everyday_csv)
-husky_map = load_husky_map(husky_map_csv)
-x_prompt = "Reflect on this event with insight."
-husky_prompt = husky_map.get(husky_id, "Describe this.")
+if __name__ == "__main__":
+    event_text, husky_id = get_last_event_and_id(everyday_csv)
+    husky_map = load_husky_map(husky_map_csv)
+    x_prompt = "Reflect on this event with insight."
+    husky_prompt = husky_map.get(husky_id, "Describe this.")
+    
+    if event_text and husky_id != -1:
+        full_prompt, response = ask_AliN(x_prompt, husky_prompt, event_text)
+        save_to_db(db_path, event_text, husky_id, full_prompt, response)
+        result = {"prompt": full_prompt, "response": response}
+    else:
+        result = {"error": "Missing input or husky ID."}
 
-if event_text and husky_id != -1:
-    full_prompt, response = ask_AliN(x_prompt, husky_prompt, event_text)
-    save_to_db(db_path, event_text, husky_id, full_prompt, response)
-    result = {"prompt": full_prompt, "response": response}
-else:
-    result = {"error": "Missing input or husky ID."}
-
-if "response" in locals():
-    print("Saved to how_far_we_come.db:")
-    print(f"\nPrompt:\n{full_prompt}\n\nResponse:\n{response}")
-else:
-    print(result["error"])
+#   if "response" in locals():
+ #       print("Saved to how_far_we_come.db:")
+  #      print(f"\nPrompt:\n{full_prompt}\n\nResponse:\n{response}")
+   # else:
+    #    print(result["error"])

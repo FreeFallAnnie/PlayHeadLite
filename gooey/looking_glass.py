@@ -112,7 +112,7 @@ class LookingGlass:
     
         popup = tk.Toplevel(self.root)
         popup.title("WonderSparked Response")
-        popup.geometry("600x500")
+        popup.geometry("400x300")
     
         text_frame = tk.Frame(popup)
         text_frame.pack(fill=tk.BOTH, expand=True)
@@ -133,6 +133,7 @@ class LookingGlass:
         self.start_callback = start_callback
         self.root = tk.Tk()
         self.root.title("Looking Glass")
+        self.root.configure(bg="white")
         self.husky_map = load_husky_map()
 
         self.tab_control = ttk.Notebook(self.root)
@@ -140,18 +141,22 @@ class LookingGlass:
         self.history_tab = tk.Frame(self.tab_control)
         self.response_tab = tk.Frame(self.tab_control)
 
+        self.input_tab.configure(bg="white")
+        self.history_tab.configure(bg="white")
+        self.response_tab.configure(bg="white")
+
         self.tab_control.add(self.input_tab, text='Record')
         self.tab_control.add(self.history_tab, text='your Everyday')
         self.tab_control.add(self.response_tab, text='with Wonder!')
         self.tab_control.pack(expand=1, fill="both")
 
-        self.label = tk.Label(self.input_tab, text="Press Record to begin!", font=("Helvetica", 16))
+        self.label = tk.Label(self.input_tab, text="Press Record to begin!", font=("Helvetica", 16), bg="white")
         self.label.pack(pady=20)
         
         self.record_btn = tk.Button(self.input_tab, text="Record an everyday event", command=self.record_audio)
         self.record_btn.pack(pady=10)
         
-        button_frame = tk.Frame(self.input_tab)
+        button_frame = tk.Frame(self.input_tab, bg="white")
         button_frame.pack(pady=10)
         
         self.keep_btn = tk.Button(button_frame, text="Keep", command=self.keep_text, state='disabled')
@@ -160,7 +165,7 @@ class LookingGlass:
         self.discard_btn = tk.Button(button_frame, text="Discard", command=self.discard_text, state='disabled')
         self.discard_btn.pack(side=tk.LEFT, padx=10)
 
-        self.transcription = tk.Label(self.input_tab, text="", wraplength=500, justify="left")
+        self.transcription = tk.Label(self.input_tab, text="", wraplength=500, justify="left", bg="white")
         self.transcription.pack(pady=20)
 
         self.tree = ttk.Treeview(self.history_tab, columns=("timestamp", "husky_id", "event_text"), show="headings")
@@ -196,14 +201,14 @@ class LookingGlass:
         self.label.config(text="I listen better when you wait for 3 seconds and keep the everyday event short and sweet!")
         self.root.update()
         self.current_text = recognize_from_mic()
-        self.label.config(text="Finished Recording! wait a moment before navigating between pages.")
+        self.label.config(text="Finished Recording! Wait a moment before navigating between pages.")
         self.transcription.config(text=self.current_text)
         self.keep_btn.config(state='normal')
         self.discard_btn.config(state='normal')
 
     def keep_text(self):
         try:
-            husky_id = simpledialog.askinteger("Husky ID", "Enter HuskyLens ID:")
+            husky_id = simpledialog.askinteger("Colour your Lens", "Enter ID:")
             if husky_id is None:
                 self.label.config(text="Input cancelled.")
                 return
@@ -216,7 +221,7 @@ class LookingGlass:
                 ai_response, color = self.start_callback(self.current_text, husky_id)
                 self.label.config(text=(
                     f"WonderSparked!\n"
-                    f"{ai_response[:80]}\n"
+                    f"{ai_response[:20]}\n"
                     f"Color: {color} \n Explore the other pages to see."
                 ))
             else:

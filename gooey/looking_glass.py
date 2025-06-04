@@ -112,7 +112,7 @@ class LookingGlass:
     
         popup = tk.Toplevel(self.root)
         popup.title("WonderSparked Response")
-        popup.geometry("400x300")
+        popup.geometry("500x400")
     
         text_frame = tk.Frame(popup)
         text_frame.pack(fill=tk.BOTH, expand=True)
@@ -153,16 +153,16 @@ class LookingGlass:
         self.label = tk.Label(self.input_tab, text="Press Record to begin!", font=("Helvetica", 16), bg="white")
         self.label.pack(pady=20)
         
-        self.record_btn = tk.Button(self.input_tab, text="Record an everyday event", command=self.record_audio)
+        self.record_btn = tk.Button(self.input_tab, text="Record an everyday event", command=self.record_audio, bg="white", activebackground="white")
         self.record_btn.pack(pady=10)
         
         button_frame = tk.Frame(self.input_tab, bg="white")
         button_frame.pack(pady=10)
         
-        self.keep_btn = tk.Button(button_frame, text="Keep", command=self.keep_text, state='disabled')
+        self.keep_btn = tk.Button(button_frame, text="Keep", command=self.keep_text, state='disabled', bg="white", activebackground="white")
         self.keep_btn.pack(side=tk.LEFT, padx=10)
         
-        self.discard_btn = tk.Button(button_frame, text="Discard", command=self.discard_text, state='disabled')
+        self.discard_btn = tk.Button(button_frame, text="Discard", command=self.discard_text, state='disabled', bg="white", activebackground="white")
         self.discard_btn.pack(side=tk.LEFT, padx=10)
 
         self.transcription = tk.Label(self.input_tab, text="", wraplength=500, justify="left", bg="white")

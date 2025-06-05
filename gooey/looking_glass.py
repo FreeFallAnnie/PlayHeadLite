@@ -191,6 +191,8 @@ class LookingGlass:
             tree.tag_configure("YELLOW", background="#fffab3")
             tree.tag_configure("ORANGE", background="#ffd1a4")
             tree.tag_configure("PINK", background="#ffccdc")
+            tree.tag_configure("BLACK", background="#d3d3d3")   # light grey to contrast black text
+            tree.tag_configure("GREY", background="#cccccc")    # medium grey
             tree.tag_configure("UNKNOWN", background="#eeeeee")
 
         self.current_text = ""

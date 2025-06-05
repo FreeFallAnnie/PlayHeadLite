@@ -71,7 +71,7 @@ def ask_AliN(x_prompt, husky_prompt, event_text):
     response = client.chat.completions.create(
         model="gpt-4",
         messages=[
-            {"role": "system", "content": "Respond clearly and creatively."},
+            {"role": "system", "content": "Respond clearly with just a dash of wonder."},
             {"role": "user", "content": full_prompt}
         ],
         temperature=0.7
